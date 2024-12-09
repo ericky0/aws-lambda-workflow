@@ -32,7 +32,7 @@ jobs:
 
       # Empacotar arquivos para deploy
       - name: Package Lambda
-        run: zip -r lambda.zip dist/
+        run: zip -r lambda.zip dist/ node_modules/
 
       # Deploy para AWS Lambda
       - name: Deploy to AWS Lambda
