@@ -1,37 +1,44 @@
 import { SQSHandler, SQSRecord } from 'aws-lambda'
+import DiscordService, { BuildMessageProps } from './service'
+import { allowedChannels, webhookChannelsMap } from './config/channels'
+import axios from 'axios'
 
 export const handler: SQSHandler = async (event) => {
-  try {
-    console.log('Received SQS Event:', JSON.stringify(event))
+  console.log('Received SQS Event:', JSON.stringify(event))
 
-    for (const record of event.Records) {
-      // Processar cada mensagem do SQS
-      await processMessage(record)
+  for (const record of event.Records) {
+    const payload = JSON.parse(record.body) as BuildMessageProps
+
+    const {
+      channel,
+      rowId,
+      error,
+      instanceName,
+      criticityLevel,
+      cardLink,
+      title,
+    } = payload
+
+    if (!DiscordService.isValidChannelType(channel)) {
+      throw new Error(
+        `this channel is not valid, try any of these: ${allowedChannels.join(
+          ', '
+        )}`
+      )
     }
 
-    console.log('All messages processed successfully.')
-  } catch (error) {
-    console.error('Error processing SQS event:', error)
-    throw new Error('Error processing SQS messages')
-  }
-}
+    const message = DiscordService.buildMessage({
+      channel,
+      rowId,
+      error,
+      instanceName,
+      criticityLevel,
+      cardLink,
+      title,
+    })
 
-// Função para processar cada mensagem
-const processMessage = async (record: SQSRecord): Promise<void> => {
-  try {
-    console.log('Processing message:', record.body)
-
-    // Aqui você pode tratar os dados da mensagem
-    const messageData = JSON.parse(record.body)
-
-    // Exemplo de lógica personalizada
-    if (messageData.action === 'create') {
-      console.log('Create action detected, processing...')
-    } else {
-      console.log('Unhandled action:', messageData.action)
-    }
-  } catch (error) {
-    console.error('Error processing message:', error)
-    throw error // Re-throw para permitir reprocessamento (se configurado no SQS)
+    await axios.post(webhookChannelsMap[channel], {
+      content: message,
+    })
   }
 }

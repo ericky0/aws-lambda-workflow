@@ -1,21 +1,28 @@
-import { AllowedChannelsType } from './config/channels'
+import {
+  allowedChannels,
+  AllowedChannelsType,
+  webhookChannelsMap,
+} from './config/channels'
 
 export interface BuildMessageProps {
   rowId: number
   error: string
   instanceName: string
   criticityLevel: 1 | 2 | 3
-  channelName: AllowedChannelsType
   cardLink: string
   title: string
-  channel: string
+  channel: AllowedChannelsType
 }
 
 export default class DiscordService {
+  static isValidChannelType(channel: string): channel is AllowedChannelsType {
+    return allowedChannels.includes(channel)
+  }
+
   static buildMessage(config: BuildMessageProps): string {
     const hr = '\n\n--------------------------------------\n'
 
-    let message = hr + this.buildInitialPartMessage(config.channelName) + '\n'
+    let message = hr + this.buildInitialPartMessage(config.channel) + '\n'
 
     const parts = this.getMessageParts(config)
 
