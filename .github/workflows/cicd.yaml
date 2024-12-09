@@ -14,6 +14,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Configurar credenciais da AWS
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
       # Instalar dependências
       - name: Install dependencies
         run: npm ci
@@ -28,12 +36,7 @@ jobs:
 
       # Deploy para AWS Lambda
       - name: Deploy to AWS Lambda
-        uses: aws-actions/aws-cli-action@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          command: |
-            aws lambda update-function-code \
-              --function-name discord-notification-webhook \
-              --zip-file fileb://lambda.zip
+        run: |
+          aws lambda update-function-code \
+            --function-name discordNotification \
+            --zip-file fileb://lambda.zip
