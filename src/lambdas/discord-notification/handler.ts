@@ -2,7 +2,7 @@ import { SQSHandler, SQSRecord } from 'aws-lambda'
 
 export const handler: SQSHandler = async (event) => {
   try {
-    console.log('Received SQS Event:', JSON.stringify(event, null, 2))
+    console.log('Received SQS Event:', JSON.stringify(event))
 
     for (const record of event.Records) {
       // Processar cada mensagem do SQS
