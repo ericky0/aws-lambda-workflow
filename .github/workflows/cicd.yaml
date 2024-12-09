@@ -1,28 +1,39 @@
-name: Deploy Lambda Function
+name: Deploy Lambda
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Install zip tool
-        uses: montudor/action-zip@v1
+      # Checkout do código-fonte
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Create Zip file for Lambda function
-        run: zip -r code.zip .
+      # Instalar dependências
+      - name: Install dependencies
+        run: npm ci
 
-      - name: AWS CLI v2
-        uses: imehedi/actions-awscli-v2@latest
+      # Build do código TypeScript
+      - name: Build TypeScript
+        run: npx tsc
+
+      # Empacotar arquivos para deploy
+      - name: Package Lambda
+        run: zip -r lambda.zip dist/
+
+      # Deploy para AWS Lambda
+      - name: Deploy to AWS Lambda
+        uses: aws-actions/aws-cli-action@v2
         with:
-          args: "lambda update-function-code \
-            --function-name arn:aws:lambda:us-east-1:149789446184:function:discord-notification-webhook \
-            --zip-file fileb://code.zip"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: 'us-east-1'
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          command: |
+            aws lambda update-function-code \
+              --function-name discord-notification-webhook \
+              --zip-file fileb://lambda.zip
